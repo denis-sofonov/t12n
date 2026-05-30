@@ -1,0 +1,326 @@
+---
+import '../styles/global.css'
+import { ClientRouter } from 'astro:transitions'
+import Search from '../components/Search.astro'
+
+interface Props {
+  title?: string
+  description?: string
+  lang?: 'en' | 'ru'
+  footer?: boolean
+}
+const {
+  title = 't12n — type-driven runtime validation',
+  description = 'TypeScript types vanish at runtime. t12n puts the check back — straight from your types, no schemas to write.',
+  lang = 'en',
+  footer = true,
+} = Astro.props
+
+const nav = lang === 'ru'
+  ? { guide: 'Гайд', frameworks: 'Фреймворки', concepts: 'Концепции', play: 'Playground', start: '/ru/guide/getting-started', frameworksHref: '/ru/guide/frameworks', conceptsHref: '/ru/guide/concepts', playHref: '/ru/playground' }
+  : { guide: 'Guide', frameworks: 'Frameworks', concepts: 'Concepts', play: 'Playground', start: '/guide/getting-started', frameworksHref: '/guide/frameworks', conceptsHref: '/guide/concepts', playHref: '/playground' }
+
+const repo = 'https://github.com/denis-sofonov/t12n'
+const footTag = lang === 'ru'
+  ? 'Рантайм-валидация прямо из ваших TypeScript-типов.'
+  : 'Runtime validation, straight from your TypeScript types.'
+const footLinks = lang === 'ru'
+  ? [
+      { t: 'Начать', href: '/ru/guide/getting-started' },
+      { t: 'GitHub', href: repo, ext: true },
+      { t: 'npm', href: 'https://www.npmjs.com/package/t12n', ext: true },
+      { t: 'Лицензия — MIT', href: `${repo}/blob/main/LICENSE`, ext: true },
+    ]
+  : [
+      { t: 'Get started', href: '/guide/getting-started' },
+      { t: 'GitHub', href: repo, ext: true },
+      { t: 'npm', href: 'https://www.npmjs.com/package/t12n', ext: true },
+      { t: 'License — MIT', href: `${repo}/blob/main/LICENSE`, ext: true },
+    ]
+
+const ogImage = new URL('/og.png', Astro.site).href
+const canonical = new URL(Astro.url.pathname, Astro.site).href
+
+// Switch locale on the *same* page, not the home root.
+const p = Astro.url.pathname
+const langHref = lang === 'ru'
+  ? (p.replace(/^\/ru(?=\/|$)/, '') || '/')
+  : (p === '/' ? '/ru/' : '/ru' + p)
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#ff5a1f" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={lang === 'ru' ? 'ru_RU' : 'en_US'} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    />
+    <ClientRouter />
+  </head>
+  <body>
+    <header class="nav" id="site-nav">
+      <div class="wrap nav__row">
+        <a class="nav__brand" href={lang === 'ru' ? '/ru/' : '/'}>
+          <svg class="brand-glyph" viewBox="0 0 32 32" aria-hidden="true">
+            <path class="brand-glyph__swipe" d="M7 19 L25 13" fill="none" stroke-width="5" stroke-linecap="round" />
+            <g class="brand-glyph__braces" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13.5 5.5 C11 5.5 11 8 11 10.5 C11 12.8 9.5 15 7.5 16 C9.5 17 11 19.2 11 21.5 C11 24 11 26.5 13.5 26.5" />
+              <path d="M18.5 5.5 C21 5.5 21 8 21 10.5 C21 12.8 22.5 15 24.5 16 C22.5 17 21 19.2 21 21.5 C21 24 21 26.5 18.5 26.5" />
+            </g>
+          </svg>
+          <span class="nav__mark">t12n</span>
+          <span class="nav__beta">beta</span>
+        </a>
+        <button class="nav__search" id="search-open" aria-label={lang === 'ru' ? 'Поиск' : 'Search'}>
+          <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <span class="nav__search-label">{lang === 'ru' ? 'Поиск' : 'Search'}</span>
+          <kbd>⌘K</kbd>
+        </button>
+        <nav class="nav__links" id="nav-links">
+          <a href={nav.start}>{nav.guide}</a>
+          <a href={nav.frameworksHref}>{nav.frameworks}</a>
+          <a href={nav.conceptsHref}>{nav.concepts}</a>
+          <a href={nav.playHref}>{nav.play}</a>
+          <a class="nav__gh" href="https://github.com/denis-sofonov/t12n" target="_blank" rel="noopener" aria-label="GitHub">
+            <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          </a>
+          <span class="nav__sep" aria-hidden="true"></span>
+          <a class="nav__lang" href={langHref}>{lang === 'ru' ? 'EN' : 'RU'}</a>
+        </nav>
+        <button class="nav__burger" id="nav-burger" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </header>
+
+    <Search lang={lang} />
+
+    <main><slot /></main>
+
+    {footer && (
+    <footer class="foot">
+      <div class="wrap foot__row">
+        <div class="foot__lede">
+          <a class="foot__brand" href={lang === 'ru' ? '/ru/' : '/'}>
+            <svg class="brand-glyph brand-glyph--sm" viewBox="0 0 32 32" aria-hidden="true">
+              <path class="brand-glyph__swipe" d="M7 19 L25 13" fill="none" stroke-width="5" stroke-linecap="round" />
+              <g class="brand-glyph__braces" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13.5 5.5 C11 5.5 11 8 11 10.5 C11 12.8 9.5 15 7.5 16 C9.5 17 11 19.2 11 21.5 C11 24 11 26.5 13.5 26.5" />
+                <path d="M18.5 5.5 C21 5.5 21 8 21 10.5 C21 12.8 22.5 15 24.5 16 C22.5 17 21 19.2 21 21.5 C21 24 21 26.5 18.5 26.5" />
+              </g>
+            </svg>
+            <span class="foot__mark">t12n</span>
+          </a>
+          <span class="foot__tag">{footTag}</span>
+        </div>
+        <nav class="foot__links">
+          {footLinks.map((l) => (
+            <a href={l.href} {...(l.ext ? { target: '_blank', rel: 'noopener' } : {})}>{l.t}{l.ext ? ' ↗' : ''}</a>
+          ))}
+        </nav>
+      </div>
+    </footer>
+    )}
+
+    <style>
+      /* flat hairline header */
+      .nav {
+        position: sticky; top: 0; z-index: 50; padding: 0;
+        background: color-mix(in srgb, var(--paper) 80%, transparent);
+        backdrop-filter: blur(10px) saturate(1.4);
+        border-bottom: 1px solid var(--line);
+      }
+      .nav__row {
+        position: relative;
+        display: flex; align-items: center; justify-content: space-between;
+        height: 60px;
+      }
+      .nav__brand { display: inline-flex; align-items: center; gap: 0.45rem; }
+      .nav__mark {
+        font-family: var(--font-mono); font-weight: 600; font-size: 1.05rem;
+        letter-spacing: -0.01em; color: var(--ink);
+      }
+
+      /* brand glyph — the favicon mark: accent marker swipe through ink braces */
+      .brand-glyph { width: 22px; height: 22px; display: block; flex-shrink: 0; }
+      .brand-glyph--sm { width: 18px; height: 18px; }
+      .brand-glyph__swipe { stroke: var(--accent); }
+      .brand-glyph__braces { stroke: var(--ink); }
+      .nav__brand:hover .brand-glyph__swipe { stroke: var(--accent-2); }
+      .nav__beta {
+        font-family: var(--font-mono); font-size: 0.6rem; text-transform: uppercase;
+        letter-spacing: 0.1em; color: var(--accent);
+        border: 1px solid currentColor; border-radius: 5px;
+        padding: 0.12em 0.4em; line-height: 1; align-self: center;
+      }
+      .nav__search {
+        display: inline-flex; align-items: center; gap: 0.45rem; margin-left: auto;
+        background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+        padding: 0.34rem 0.6rem; color: var(--ink-3); cursor: pointer;
+        font-family: var(--font-body); font-size: 0.82rem; transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
+      }
+      .nav__search:hover { border-color: var(--accent); color: var(--accent); }
+      .nav__search kbd { font-family: var(--font-mono); font-size: 0.66rem; color: var(--ink-3); border: 1px solid var(--line); border-radius: 4px; padding: 0.05em 0.3em; }
+      .nav__links { display: flex; align-items: center; gap: 1.3rem; font-size: 0.9rem; margin-left: 1rem; }
+      .nav__links a { color: var(--ink-2); transition: color 0.18s var(--ease); }
+      .nav__links a:hover { color: var(--accent); }
+      .nav__gh { display: inline-flex; align-items: center; }
+      .nav__gh svg { display: block; }
+      .nav__sep { width: 1px; height: 16px; background: var(--line); }
+      .nav__lang { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.05em; }
+
+      /* hamburger — mobile only */
+      .nav__burger {
+        display: none; flex-direction: column; gap: 4px; cursor: pointer;
+        background: none; border: 0; padding: 8px; margin-right: -8px;
+      }
+      .nav__burger span {
+        display: block; width: 20px; height: 2px; border-radius: 2px;
+        background: var(--ink); transition: transform 0.22s var(--ease), opacity 0.18s var(--ease);
+      }
+      #site-nav.open .nav__burger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+      #site-nav.open .nav__burger span:nth-child(2) { opacity: 0; }
+      #site-nav.open .nav__burger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+      @media (max-width: 720px) {
+        .nav__burger { display: inline-flex; }
+        .nav__search-label, .nav__search kbd { display: none; }
+        .nav__search { margin-left: auto; margin-right: 0.1rem; padding: 0.38rem; }
+        .nav__links { margin-left: 0;
+          position: absolute; top: calc(100% + 0.5rem); left: 0; right: 0;
+          flex-direction: column; align-items: flex-start; gap: 0;
+          background: color-mix(in srgb, var(--paper) 92%, transparent);
+          backdrop-filter: blur(13px) saturate(150%);
+          border: 1px solid color-mix(in srgb, var(--ink) 9%, transparent);
+          border-radius: 14px;
+          padding: 0.4rem 1rem 0.8rem;
+          box-shadow: 0 18px 34px -22px rgba(27, 23, 18, 0.5);
+          opacity: 0; transform: translateY(-6px); pointer-events: none;
+          transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
+        }
+        #site-nav.open .nav__links { opacity: 1; transform: none; pointer-events: auto; }
+        .nav__links a { width: 100%; padding: 0.6rem 0; font-size: 0.98rem; border-bottom: 1px solid var(--line-2); }
+        .nav__gh { padding: 0.6rem 0; }
+        .nav__sep { display: none; }
+        .nav__lang { padding: 0.6rem 0; }
+      }
+
+      .foot { margin-top: clamp(3rem, 7vw, 5rem); border-top: 1px solid var(--line); }
+      .foot__row {
+        display: flex; align-items: center; justify-content: space-between;
+        flex-wrap: wrap; gap: 0.8rem 1.4rem; min-height: 60px; padding: 1rem 0;
+        font-size: 0.82rem; color: var(--ink-3); font-family: var(--font-mono);
+      }
+      .foot__lede { display: flex; align-items: baseline; gap: 0.2rem 0.7rem; flex-wrap: wrap; min-width: 0; }
+      .foot__brand { display: inline-flex; align-items: center; gap: 0.4rem; }
+      .foot__mark { color: var(--ink); font-weight: 600; }
+      .foot__tag { color: var(--ink-3); font-family: var(--font-body); }
+      .foot__links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1.2rem; margin-left: auto; }
+      .foot__links a { color: var(--ink-2); transition: color 0.18s var(--ease); }
+      .foot__links a:hover { color: var(--accent); }
+      @media (max-width: 640px) { .foot__links { margin-left: 0; width: 100%; } }
+    </style>
+
+    <script>
+      // Reveal-on-scroll, re-armed after every View Transition navigation.
+      function arm() {
+        const els = document.querySelectorAll('.reveal:not(.in)')
+        if (!('IntersectionObserver' in window) || els.length === 0) {
+          els.forEach((e) => e.classList.add('in'))
+          return
+        }
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('in')
+                io.unobserve(e.target)
+              }
+            }
+          },
+          { rootMargin: '0px 0px -8% 0px', threshold: 0.08 },
+        )
+        els.forEach((e) => io.observe(e))
+      }
+
+      // Mobile menu toggle.
+      function navMenu() {
+        const nav = document.getElementById('site-nav')
+        const burger = document.getElementById('nav-burger')
+        const links = document.getElementById('nav-links')
+        if (!nav || !burger || !links) return
+        const close = () => { nav.classList.remove('open'); burger.setAttribute('aria-expanded', 'false') }
+        burger.addEventListener('click', () => {
+          const open = nav.classList.toggle('open')
+          burger.setAttribute('aria-expanded', String(open))
+        })
+        links.querySelectorAll('a').forEach((a) => a.addEventListener('click', close))
+      }
+
+      // Count-up for [data-count] numbers when they scroll into view.
+      function countUp() {
+        const els = document.querySelectorAll('[data-count]')
+        if (els.length === 0) return
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        const fmt = (el, n) => (el.dataset.prefix || '') + Math.round(n) + (el.dataset.suffix || '')
+        if (reduce || !('IntersectionObserver' in window)) {
+          els.forEach((el) => { el.textContent = fmt(el, +el.dataset.count) })
+          return
+        }
+        const io = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue
+            const el = e.target
+            io.unobserve(el)
+            const target = +el.dataset.count
+            const t0 = performance.now(), dur = 1100
+            const tick = (t) => {
+              const p = Math.min(1, (t - t0) / dur)
+              el.textContent = fmt(el, target * (1 - Math.pow(1 - p, 3)))
+              if (p < 1) requestAnimationFrame(tick)
+            }
+            requestAnimationFrame(tick)
+          }
+        }, { threshold: 0.6 })
+        els.forEach((el) => io.observe(el))
+      }
+
+      // Copy-to-clipboard for any [data-copy] button (install snippet, etc.).
+      function copyBtns() {
+        document.querySelectorAll('[data-copy]').forEach((btn) => {
+          if (btn.dataset.wired) return
+          btn.dataset.wired = '1'
+          btn.addEventListener('click', async () => {
+            try {
+              await navigator.clipboard.writeText(btn.dataset.copy || '')
+              btn.classList.add('is-copied')
+              setTimeout(() => btn.classList.remove('is-copied'), 1400)
+            } catch {}
+          })
+        })
+      }
+
+      document.addEventListener('astro:page-load', () => { arm(); navMenu(); countUp(); copyBtns() })
+    </script>
+  </body>
+</html>

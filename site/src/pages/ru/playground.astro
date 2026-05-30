@@ -1,0 +1,27 @@
+---
+import Base from '../../layouts/Base.astro'
+import Playground from '../../components/Playground.astro'
+---
+
+<Base lang="ru" title="Playground — t12n" description="Попробуйте проверку t12n прямо в браузере — меняйте данные и смотрите результат валидации.">
+  <section class="wrap pg-page">
+    <p class="eyebrow">playground</p>
+    <h1>Посмотрите, как работает проверка.</h1>
+    <p class="lede">
+      Здесь работает настоящий рантайм t12n прямо в браузере. Тип <code>User</code>
+      ниже фиксированный (его схема обычно выводится на сборке), но
+      <strong>данные можно менять</strong> — отредактируйте, нажмите «Проверить»
+      и смотрите результат. При несовпадении получите ту же
+      <code>ValidationError</code> с путём, что и в реальном приложении.
+    </p>
+    <Playground lang="ru" />
+  </section>
+</Base>
+
+<style>
+  .pg-page { padding-top: clamp(2.5rem, 6vw, 4rem); padding-bottom: clamp(3rem, 7vw, 5rem); }
+  .pg-page h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.9rem, 4.3vw, 2.9rem); letter-spacing: -0.03em; line-height: 1.05; margin: 0.8rem 0 0; }
+  .pg-page .lede { margin-top: 1rem; max-width: 64ch; color: var(--ink-2); font-size: 1.02rem; line-height: 1.65; }
+  .pg-page .lede code { font-family: var(--font-mono); font-size: 0.86em; color: var(--accent-2); background: var(--accent-soft); padding: 0.08em 0.34em; border-radius: 5px; }
+  .pg-page .lede strong { color: var(--ink); font-weight: 600; }
+</style>

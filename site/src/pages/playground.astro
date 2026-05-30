@@ -1,0 +1,27 @@
+---
+import Base from '../layouts/Base.astro'
+import Playground from '../components/Playground.astro'
+---
+
+<Base title="Playground — t12n" description="Try t12n's runtime check in the browser — edit the data and watch the validation result.">
+  <section class="wrap pg-page">
+    <p class="eyebrow">playground</p>
+    <h1>See a check run.</h1>
+    <p class="lede">
+      This runs t12n's actual runtime in your browser. The <code>User</code> type
+      below is fixed (its schema is normally derived at build), but the
+      <strong>data is yours to edit</strong> — change it, hit Validate, and watch
+      the result. A mismatch gives you the same path-aware
+      <code>ValidationError</code> you'd get in a real app.
+    </p>
+    <Playground lang="en" />
+  </section>
+</Base>
+
+<style>
+  .pg-page { padding-top: clamp(2.5rem, 6vw, 4rem); padding-bottom: clamp(3rem, 7vw, 5rem); }
+  .pg-page h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(2rem, 4.5vw, 3rem); letter-spacing: -0.035em; line-height: 1.04; margin: 0.8rem 0 0; }
+  .pg-page .lede { margin-top: 1rem; max-width: 64ch; color: var(--ink-2); font-size: 1.02rem; line-height: 1.65; }
+  .pg-page .lede code { font-family: var(--font-mono); font-size: 0.86em; color: var(--accent-2); background: var(--accent-soft); padding: 0.08em 0.34em; border-radius: 5px; }
+  .pg-page .lede strong { color: var(--ink); font-weight: 600; }
+</style>

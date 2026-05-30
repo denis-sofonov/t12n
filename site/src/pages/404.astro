@@ -1,0 +1,28 @@
+---
+import Base from '../layouts/Base.astro'
+---
+
+<Base title="404 — t12n" description="Page not found.">
+  <section class="nf wrap">
+    <p class="nf__code">4<span class="mark">0</span>4</p>
+    <h1 class="nf__title">This page didn't pass validation.</h1>
+    <p class="nf__sub">The path you followed doesn't match anything here — much like
+      a payload that isn't the shape its type promised.</p>
+    <div class="nf__cta">
+      <a class="btn btn--brand" href="/">← Home</a>
+      <a class="btn" href="/guide/getting-started">Getting started</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf { text-align: center; padding: clamp(4rem, 12vw, 9rem) 0; max-width: 640px; }
+  .nf__code { font-family: var(--font-mono); font-size: clamp(4rem, 14vw, 8rem); font-weight: 500; line-height: 1; color: var(--ink); letter-spacing: -0.04em; }
+  .nf__title { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.6rem, 4vw, 2.4rem); letter-spacing: -0.025em; margin: 1.2rem 0 0; }
+  .nf__sub { margin: 1rem auto 0; max-width: 46ch; color: var(--ink-2); line-height: 1.65; }
+  .nf__cta { display: flex; gap: 0.6rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.66rem 1.15rem; border-radius: 9px; font-size: 0.92rem; font-weight: 500; border: 1px solid var(--line); background: var(--card); color: var(--ink); transition: transform 0.18s var(--ease), border-color 0.18s var(--ease), color 0.18s var(--ease); }
+  .btn:hover { transform: translateY(-2px); border-color: var(--accent); color: var(--accent); }
+  .btn--brand { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn--brand:hover { background: var(--accent-2); color: #fff; }
+</style>

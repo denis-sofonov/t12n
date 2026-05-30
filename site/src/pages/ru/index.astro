@@ -1,0 +1,607 @@
+---
+import Base from '../../layouts/Base.astro'
+import { Code } from 'astro:components'
+import { siReact, siVuedotjs, siSvelte, siSolid, siNextdotjs, siNuxtdotjs, siAstro } from 'simple-icons'
+
+const theme = 'vitesse-light'
+const fws = [
+  ['React', siReact], ['Vue', siVuedotjs], ['Svelte', siSvelte], ['Solid', siSolid],
+  ['Next.js', siNextdotjs], ['Nuxt', siNuxtdotjs], ['Astro', siAstro],
+] as const
+const bundlers = ['Vite', 'webpack', 'Rollup', 'esbuild', 'Rspack']
+
+const examples = [
+  {
+    file: 'user.ts',
+    type: `type User = {
+  id: string
+  email: string
+  age: number
+}
+
+// прямо из сети — без проверки
+const user: User =
+  await fetch('/api/me').then(r => r.json())`,
+    out: `// валидатор t12n, скомпилирован из User
+function checkUser(v) {
+  if (typeof v.id    !== 'string') fail('id')
+  if (typeof v.email !== 'string') fail('email')
+  if (typeof v.age   !== 'number') fail('age')
+  return v
+}
+
+// граница теперь под охраной
+const user = checkUser(
+  await fetch('/api/me').then(r => r.json())
+)`,
+  },
+  {
+    file: 'order.ts',
+    type: `type Order = {
+  id: string
+  total: number
+  status: 'paid' | 'pending'
+}
+
+// восстановлено из localStorage — без проверки
+const order: Order =
+  JSON.parse(localStorage.cart)`,
+    out: `// валидатор t12n, скомпилирован из Order
+function checkOrder(v) {
+  if (typeof v.id    !== 'string') fail('id')
+  if (typeof v.total !== 'number') fail('total')
+  if (v.status !== 'paid' &&
+      v.status !== 'pending')      fail('status')
+  return v
+}
+
+const order = checkOrder(
+  JSON.parse(localStorage.cart)
+)`,
+  },
+  {
+    file: 'message.ts',
+    type: `type Message = {
+  kind: string
+  data: number[]
+}
+
+// пришло через postMessage — без проверки
+const msg: Message = event.data`,
+    out: `// валидатор t12n, скомпилирован из Message
+function checkMessage(v) {
+  if (typeof v.kind !== 'string') fail('kind')
+  if (!Array.isArray(v.data))     fail('data')
+  for (const n of v.data)
+    if (typeof n !== 'number')    fail('data[]')
+  return v
+}
+
+const msg = checkMessage(event.data)`,
+  },
+] as const
+
+const withoutCode = `const user: User = await fetch('/me')
+  .then(r => r.json())
+
+// API прислал { id: 1, email: null }
+
+// …40 строк спустя, без следа к причине:
+user.email.toLowerCase()
+// 💥 Cannot read … of null`
+
+const withCode = `const user: User = await fetch('/me')
+  .then(r => r.json())
+
+// проверка уже здесь,
+// сгенерирована из типа User.
+
+// ✗ поймано на этой строке: поле,
+//   ожидаемый тип и что пришло.`
+
+const boundaries = [
+  'fetch().json()', 'JSON.parse()', 'localStorage', 'postMessage',
+  'as any / unknown', 'параметры функций', 'возвраты функций', 'ref / useState',
+]
+---
+
+<Base lang="ru">
+  {/* ══ HERO ══ */}
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div class="hero__lede">
+        <h1 class="hero__title">
+          <span class="hero__title-q">Ваши типы исчезают в рантайме.</span>
+          <span class="hero__title-a">t12n возвращает <span class="mark mark--hero">проверку</span>.</span>
+        </h1>
+        <p class="hero__sub">
+          Чужие данные приходят отовсюду — ответ API, который вы кладёте в
+          типизированную переменную, аргумент функции, <code>JSON.parse</code>,
+          <code>localStorage</code>. t12n читает ваш тип и прямо там, в момент прихода
+          данных, вставляет настоящую проверку. Без схем, без вызовов
+          <code>validate()</code> — а в live-режиме продолжает следить за значением
+          всю его жизнь.
+        </p>
+        <div class="hero__cta">
+          <a class="btn btn--brand" href="/ru/guide/getting-started">Начать</a>
+          <a class="btn" href="/ru/playground">Попробовать</a>
+        </div>
+        <div class="install" aria-label="Установить t12n">
+          <code class="install__cmd"><span class="install__sigil">$</span> npm i t12n</code>
+          <button class="install__copy" type="button" data-copy="npm i t12n" aria-label="Скопировать команду установки">
+            <span class="install__ico install__ico--copy" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><rect x="9" y="9" width="11" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>
+            <span class="install__ico install__ico--done" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 12l5 5L20 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button>
+        </div>
+        <p class="hero__meta">
+          <span class="chip chip--beta">v0.1 · beta</span>
+          <span>~3 KB</span><span class="dot">/</span><span>0 зависимостей</span><span class="dot">/</span><span class="hot">~8× Zod</span>
+        </p>
+      </div>
+
+      <figure class="forge" data-forge aria-label="типы, которые вы пишете, компилируются в рантайм-валидаторы">
+        <div class="forge__head">
+          <p class="forge__file"><span class="forge__dot" aria-hidden="true"></span><span data-name>{examples[0].file}</span></p>
+          <div class="forge__pager" data-pager>
+            {examples.map((_, i) => (
+              <button type="button" class="forge__page" data-page={i} aria-label={`Пример ${i + 1}`}>{i + 1}</button>
+            ))}
+          </div>
+        </div>
+        <article class="island">
+          <div class="island__code" data-stage>
+            {examples.map((ex, i) => (
+              <div class="ex" data-ex={i} data-file={ex.file}>
+                <div class="island__layer" data-layer="src"><Code code={ex.type} lang="ts" theme={theme} /></div>
+                <div class="island__layer island__layer--out" data-layer="out"><Code code={ex.out} lang="ts" theme={theme} /></div>
+              </div>
+            ))}
+            <div class="island__overlay" data-overlay aria-hidden="true">
+              <span class="island__spin"></span>
+              <span class="island__status" data-status>компилирую</span>
+            </div>
+          </div>
+        </article>
+      </figure>
+    </div>
+  </section>
+
+  {/* ══ 01 ══ */}
+  <section class="sec wrap reveal">
+    <p class="eyebrow"><span class="idx">01</span> разрыв</p>
+    <h2 class="sec__title">Тип — это обещание, которое<br />рантайм не проверяет.</h2>
+    <div class="split">
+      <div class="gapcol" style="--d:.04s">
+        <p class="block-cap"><span class="block-cap__dot" aria-hidden="true"></span>без t12n</p>
+        <article class="panel">
+          <div class="panel__code"><Code code={withoutCode} lang="ts" theme={theme} /></div>
+        </article>
+      </div>
+      <div class="gapcol" style="--d:.12s">
+        <p class="block-cap block-cap--ok"><span class="block-cap__dot" aria-hidden="true"></span>с t12n</p>
+        <article class="panel panel--good">
+          <div class="panel__code"><Code code={withCode} lang="ts" theme={theme} /></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  {/* ══ 02 ══ */}
+  <section class="sec wrap reveal">
+    <p class="eyebrow"><span class="idx">02</span> как это работает</p>
+    <h2 class="sec__title">Вы пишете тип.<br />Проверку пишет сборка.</h2>
+    <div class="steps">
+      <div class="step" style="--d:.04s"><span class="step__n">1</span><h3>Поставьте тип</h3><p>Обычный тип на границе или маркер <code>Check&lt;T&gt;</code> там, где нужно явно.</p></div>
+      <div class="step" style="--d:.12s"><span class="step__n">2</span><h3>Плагин его читает</h3><p>На сборке разрешает реальный тип через TS-чекер — дженерики, union'ы, <code>Date</code> и всё — в схему.</p></div>
+      <div class="step" style="--d:.2s"><span class="step__n">3</span><h3>Валидатор в бандле</h3><p>Каждый тип — отдельная линейная функция, вшитая в бандл. Схема в рантайме не интерпретируется.</p></div>
+    </div>
+  </section>
+
+  {/* ══ 03 · BREADTH ══ */}
+  <section class="sec wrap reveal">
+    <p class="eyebrow"><span class="idx">03</span> везде, где входят данные</p>
+    <h2 class="sec__title">Любая граница. Любой фреймворк.</h2>
+    <p class="breadth__label">Границы, за которыми следит</p>
+    <div class="tags">{boundaries.map((b) => <span class="tag">{b}</span>)}</div>
+    <p class="breadth__label breadth__label--gap">Работает с</p>
+    <div class="fwgrid">
+      {fws.map(([name, icon]) => (
+        <div class="fw"><svg viewBox="0 0 24 24" aria-hidden="true"><path d={icon.path} /></svg><span>{name}</span></div>
+      ))}
+    </div>
+    <div class="bundlers">{bundlers.map((b) => <span>{b}</span>)}</div>
+  </section>
+
+  {/* ══ 04 · PERFORMANCE — black band ══ */}
+  <section class="band-dark reveal">
+    <div class="wrap">
+      <p class="eyebrow"><span class="idx">04</span> скорость</p>
+      <h2 class="sec__title">Почти как проверка,<br />написанная <span class="mark mark--draw">руками</span>.</h2>
+      <p class="sec__lede">Статический доступ к полям, без поиска по схеме, без приведения типов — и ноль аллокаций, когда данные уже совпадают. Примерно <strong>в 8× быстрее Zod</strong>.</p>
+
+      <div class="bars">
+        <div class="bar" style="--d:.05s">
+          <div class="bar__head"><span class="bar__name">Руками <span class="bar__sub">потолок скорости</span></span><span class="bar__val" data-count="775" data-prefix="~" data-suffix="k/s">~775k/s</span></div>
+          <div class="bar__track"><span class="bar__fill bar__fill--ghost" style="--w:100%"></span></div>
+        </div>
+        <div class="bar" style="--d:.13s">
+          <div class="bar__head"><span class="bar__name bar__name--hero">t12n <span class="bar__sub">вшит в бандл</span></span><span class="bar__val bar__val--hero" data-count="640" data-prefix="~" data-suffix="k/s">~640k/s</span></div>
+          <div class="bar__track"><span class="bar__fill bar__fill--hero" style="--w:83%"></span></div>
+        </div>
+        <div class="bar" style="--d:.21s">
+          <div class="bar__head"><span class="bar__name">Zod v4</span><span class="bar__val" data-count="75" data-prefix="~" data-suffix="k/s">~75k/s</span></div>
+          <div class="bar__track"><span class="bar__fill" style="--w:10%"></span></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat" style="--d:.05s"><b>~3 KB</b><span>рантайм в gzip</span></div>
+        <div class="stat" style="--d:.1s"><b>0</b><span>рантайм-зависимостей</span></div>
+        <div class="stat" style="--d:.15s"><b>0</b><span>приведений типов — никогда</span></div>
+        <div class="stat" style="--d:.2s"><b>CSP</b><span>безопасно — без eval в рантайме</span></div>
+      </div>
+    </div>
+  </section>
+
+  {/* ══ 05 · ERRORS ══ */}
+  <section class="sec wrap reveal">
+    <p class="eyebrow"><span class="idx">05</span> когда падает</p>
+    <h2 class="sec__title">Когда падает —<br />сразу видно где.</h2>
+    <div class="errcols">
+      <div class="errcol">
+        <p class="sec__lede">Падает на той строке, куда пришли данные, — и говорит файл и строку, поле, какой тип ждали и что реально пришло. А <code>configure()</code> решает, что делать с провалом: в разработке — бросать ошибку, в проде — тихо слать в телеметрию.</p>
+        <ul class="ticks">
+          <li>файл и строка, где сработала проверка</li>
+          <li>из какой границы пришло значение (<code>fetch</code>, <code>JSON.parse</code>…)</li>
+          <li>путь до поля, что ждали и что получили</li>
+        </ul>
+      </div>
+      <div class="term" aria-hidden="true">
+        <div class="term__bar"><span class="term__dot"></span>консоль</div>
+        <pre class="term__body"><span class="t-bad">✗ [t12n] Validation failed</span> <span class="t-dim">·</span> <span class="t-key">src/pages/Profile.vue:42</span>  <span class="t-dim">(fetch().json())</span>
+
+  <span class="t-dim">path</span>      user.email
+  <span class="t-dim">expected</span>  <span class="t-ok">string</span>
+  <span class="t-dim">received</span>  <span class="t-bad">null</span></pre>
+      </div>
+    </div>
+  </section>
+
+  {/* ══ 06 · LIVE ══ */}
+  <section class="sec wrap reveal">
+    <p class="eyebrow"><span class="idx">06</span> за пределами границы</p>
+    <h2 class="sec__title">Проверить один раз — или<br />на всю жизнь объекта.</h2>
+    <p class="sec__lede">Обычная проверка срабатывает один раз — на границе. Включите <strong>live-режим</strong>, и t12n вернёт Proxy, который держит тип под контролем постоянно: неправильная запись даже сотней строк позже тоже поймается.</p>
+    <div class="term term--inline" aria-hidden="true">
+      <pre class="term__body"><span class="t-dim">const</span> user: User = <span class="t-dim">await</span> fetch('/api/me').then(r =&gt; r.json())
+
+user.age = <span class="t-bad">'двадцать'</span>   <span class="t-dim">// 💥 поймано — даже здесь, далеко после границы</span></pre>
+    </div>
+  </section>
+
+  {/* ══ OUTRO — quiet close ══ */}
+  <section class="sec wrap reveal">
+    <div class="outro">
+      <div class="outro__copy">
+        <h2 class="outro__title">Настройка — около пяти минут.</h2>
+        <p class="outro__sub">Подключите плагин, пишите типы — и типизированные границы начнут проверять себя сами.</p>
+      </div>
+      <div class="outro__cta">
+        <a class="btn btn--brand" href="/ru/guide/getting-started">Начать</a>
+        <a class="btn btn--ghost" href="https://github.com/denis-sofonov/t12n" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import gsap from 'gsap'
+
+  // Hero forge — cycles through a few examples. For each: shows the type, blurs it
+  // under a "compiling" overlay, reveals the compiled validator, holds, then advances
+  // to the next. Pager dots jump between examples. No-JS / reduced-motion → first type.
+  const root = document.querySelector<HTMLElement>('[data-forge]')
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (root && !reduce) {
+    const stage = root.querySelector<HTMLElement>('[data-stage]')!
+    const overlay = root.querySelector<HTMLElement>('[data-overlay]')!
+    const name = root.querySelector<HTMLElement>('[data-name]')!
+    const status = root.querySelector<HTMLElement>('[data-status]')!
+    const pages = [...root.querySelectorAll<HTMLElement>('[data-page]')]
+
+    const exs = [...stage.querySelectorAll<HTMLElement>('.ex')].map((ex) => ({
+      ex,
+      file: ex.dataset.file ?? '',
+      src: ex.querySelector<HTMLElement>('[data-layer="src"]')!,
+      out: ex.querySelector<HTMLElement>('[data-layer="out"]')!,
+    }))
+    const allLayers = exs.flatMap((e) => [e.src, e.out])
+
+    // lock the code area to the tallest layer across all examples,
+    // then overlap everything. (layers/examples are display:none until live.)
+    const lockHeight = () => {
+      root.classList.remove('is-live')
+      stage.style.height = ''
+      exs.forEach((e) => { e.ex.style.display = 'block'; e.out.style.display = 'block' })
+      const h = Math.max(...allLayers.map((l) => l.offsetHeight))
+      exs.forEach((e) => { e.ex.style.display = ''; e.out.style.display = '' })
+      root.classList.add('is-live')
+      stage.style.height = h + 'px'
+    }
+    lockHeight()
+
+    const setPager = (n: number) => pages.forEach((p, k) => p.classList.toggle('is-on', k === n))
+
+    let tl: gsap.core.Timeline | null = null
+
+    const run = (n: number) => {
+      tl?.kill()
+      const { src, out, file } = exs[n]
+
+      exs.forEach((e, k) => { e.ex.style.display = k === n ? 'block' : 'none' })
+      setPager(n)
+      root.classList.remove('is-out')
+      name.textContent = file
+      status.textContent = 'компилирую'
+
+      gsap.set(src, { opacity: 0, filter: 'blur(0px)' })
+      gsap.set(out, { opacity: 0, filter: 'blur(6px)' })
+      gsap.set(overlay, { opacity: 0 })
+
+      tl = gsap.timeline({ defaults: { ease: 'power2.out' }, onComplete: () => run((n + 1) % exs.length) })
+      tl
+        // ── the type fades in, holds ──────────────────
+        .to(src, { opacity: 1, duration: 0.5 })
+        .to({}, { duration: 1.7 })
+        // ── blur under the compiling overlay ──────────
+        .to(src, { filter: 'blur(6px)', opacity: 0.35, duration: 0.4 })
+        .to(overlay, { opacity: 1, duration: 0.3 }, '<')
+        .to({}, { duration: 1.15 })
+        // ── reveal the compiled validator ─────────────
+        .call(() => { name.textContent = 'bundle.js'; root.classList.add('is-out') })
+        .to(overlay, { opacity: 0, duration: 0.35 })
+        .to(out, { opacity: 1, filter: 'blur(0px)', duration: 0.5 }, '<')
+        .set(src, { opacity: 0 }, '<0.25')
+        // ── hold, then advance to the next example ────
+        .to({}, { duration: 2.4 })
+        .to(out, { opacity: 0, duration: 0.4 })
+    }
+
+    pages.forEach((p, n) => p.addEventListener('click', () => run(n)))
+
+    // start once it scrolls into view; pause/resume on hover
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) { run(0); io.disconnect() }
+    }, { threshold: 0.35 })
+    io.observe(root)
+
+    root.addEventListener('mouseenter', () => tl?.pause())
+    root.addEventListener('mouseleave', () => tl?.resume())
+    window.addEventListener('resize', lockHeight)
+  }
+</script>
+
+<style>
+  /* shared */
+  .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.7rem 1.25rem; border-radius: 11px; font-size: 0.92rem; font-weight: 500; border: 1px solid var(--line); background: var(--card); color: var(--ink); transition: transform 0.16s var(--ease), background 0.16s var(--ease), color 0.16s var(--ease), border-color 0.16s var(--ease), box-shadow 0.2s var(--ease); }
+  .btn:hover { transform: translateY(-2px); border-color: var(--ink); box-shadow: var(--shadow); }
+  .btn--brand { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: none; }
+  .btn--brand:hover { background: var(--accent-2); border-color: var(--accent-2); box-shadow: none; }
+  .btn--ghost { background: var(--card); color: var(--ink); border-color: var(--line); }
+  .btn--ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .sec__title { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.9rem, 4.2vw, 3rem); line-height: 1.04; letter-spacing: -0.035em; margin: 0.7rem 0 0; }
+  .sec__lede { max-width: 58ch; color: var(--ink-2); font-size: 1.06rem; line-height: 1.6; margin-top: 1.1rem; }
+  .sec__lede strong { color: var(--ink); font-weight: 600; }
+  code { font-family: var(--font-mono); font-size: 0.85em; color: var(--accent-2); background: var(--accent-soft); padding: 0.08em 0.34em; border-radius: 5px; }
+
+  /* ── hero ─────────────────────────────────────────────── */
+  .hero { position: relative; }
+  .hero__grid {
+    display: grid; grid-template-columns: 1fr 1.04fr;
+    gap: clamp(1.25rem, 2.8vw, 2.4rem); align-items: center;
+    padding-top: clamp(3.5rem, 9vw, 6.5rem); padding-bottom: clamp(3rem, 7vw, 5rem);
+  }
+
+  .eyebrow--hero { color: var(--ink-2); }
+  .eyebrow--hero .eyebrow__tick {
+    width: 7px; height: 7px; border-radius: 2px; background: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+
+  .hero__title { margin: 1.25rem 0 0; font-family: var(--font-display); }
+  .hero__title-q, .hero__title-a { display: block; }
+  .hero__title-q {
+    font-size: clamp(1.35rem, 2.9vw, 1.95rem); font-weight: 400; color: var(--ink-2);
+    line-height: 1.12; letter-spacing: -0.025em;
+  }
+  .hero__title-a {
+    margin-top: 0.4rem;
+    font-size: clamp(2.3rem, 5.4vw, 3.7rem); font-weight: 500; color: var(--ink);
+    line-height: 1.0; letter-spacing: -0.04em; text-wrap: balance;
+  }
+  .hero__title .mark--hero { clip-path: inset(0 100% 0 0); }
+
+  .hero__sub { margin-top: 1.6rem; max-width: 45ch; color: var(--ink-2); font-size: 1.05rem; line-height: 1.62; }
+  .hero__cta { display: flex; gap: 0.65rem; margin-top: 2.1rem; flex-wrap: wrap; }
+  .install {
+    display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1rem;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 0.4rem 0.5rem 0.4rem 0.85rem; font-family: var(--font-mono); font-size: 0.86rem;
+    transition: border-color 0.18s var(--ease);
+  }
+  .install:hover { border-color: var(--line-ink); }
+  .install__cmd { color: var(--ink); background: none; padding: 0; border-radius: 0; white-space: nowrap; }
+  .install__sigil { color: var(--accent); user-select: none; margin-right: 0.15rem; }
+  .install__copy {
+    display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+    border: 1px solid var(--line); border-radius: 7px; background: var(--paper); color: var(--ink-3);
+    cursor: pointer; transition: color 0.16s var(--ease), border-color 0.16s var(--ease), background 0.16s var(--ease);
+  }
+  .install__copy:hover { color: var(--accent); border-color: var(--accent); }
+  .install__copy.is-copied { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .install__ico { display: inline-flex; }
+  .install__ico--done, .install__copy.is-copied .install__ico--copy { display: none; }
+  .install__copy.is-copied .install__ico--done { display: inline-flex; }
+  .hero__meta { margin-top: 1.3rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-3); }
+  .hero__meta .dot { color: var(--line); }
+  .hero__meta .hot { color: var(--ink-3); font-weight: 400; }
+  .chip--beta { color: var(--accent); background: var(--card); border: 1px solid var(--accent); border-radius: 6px; padding: 0.12em 0.5em; font-weight: 500; letter-spacing: 0.02em; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__title .mark--hero { animation: heroWipe 0.55s var(--ease-out) 0.65s forwards; }
+    @keyframes heroWipe { to { clip-path: inset(0 0 0 0); } }
+    .hero__lede > * { opacity: 0; transform: translateY(16px); animation: rise 0.8s var(--ease-out) forwards; }
+    .hero__lede > *:nth-child(1) { animation-delay: 0.06s }
+    .hero__lede > *:nth-child(2) { animation-delay: 0.14s }
+    .hero__lede > *:nth-child(3) { animation-delay: 0.22s }
+    .hero__lede > *:nth-child(4) { animation-delay: 0.30s }
+    .hero__lede > *:nth-child(5) { animation-delay: 0.38s }
+    @keyframes rise { to { opacity: 1; transform: none } }
+  }
+  @media (max-width: 900px) { .hero__grid { grid-template-columns: 1fr; } }
+
+  /* ── forge: one island that compiles each type into a validator ── */
+  .forge { position: relative; }
+  .forge__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin: 0 0.15rem 0.7rem; }
+  .forge__file { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-2); letter-spacing: 0.01em; }
+  .forge__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease); }
+  .forge.is-out .forge__dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .forge__pager { display: flex; gap: 0.3rem; }
+  .forge__page { width: 1.5rem; height: 1.5rem; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-3); background: transparent; border: 1px solid var(--line); border-radius: 7px; cursor: pointer; transition: color 0.2s var(--ease), border-color 0.2s var(--ease), background 0.2s var(--ease); }
+  .forge__page:hover { color: var(--ink); border-color: var(--line-ink); }
+  .forge__page.is-on { color: #fff; background: var(--accent); border-color: var(--accent); }
+  .island { border: 1px solid var(--line-ink); border-radius: var(--radius); background: var(--card); overflow: hidden; box-shadow: var(--shadow); }
+
+  .island__code { position: relative; }
+  .ex { display: none; }
+  .ex:first-child { display: block; }
+  .island__layer { will-change: opacity, filter; }
+  .island__layer--out { display: none; }
+  :global(.island pre.astro-code) { margin: 0; padding: 0.8rem 1.1rem 1rem; background: transparent !important; font-size: 0.8rem; line-height: 1.85; }
+
+  /* compiling overlay — blurs the code behind it */
+  .island__overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 0.6rem; opacity: 0; pointer-events: none; background: color-mix(in srgb, var(--card) 55%, transparent); backdrop-filter: blur(3px); font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-2); }
+  .island__status::after { content: '…'; }
+  .island__spin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--accent-soft); border-top-color: var(--accent); animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* live mode: examples and their layers overlap so they can cross-fade */
+  .forge.is-live .ex { display: block; position: absolute; inset: 0; }
+  .forge.is-live .island__layer { position: absolute; inset: 0; }
+  .forge.is-live .island__layer--out { display: block; opacity: 0; }
+
+  /* sections — symmetric block padding so each full-bleed hairline sits in clear space */
+  .sec { position: relative; padding-block: clamp(2.75rem, 5.5vw, 4.25rem); }
+  .sec::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100vw; height: 1px; background: var(--line); }
+  .sec__title { max-width: 22ch; }
+
+  /* problem */
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.9rem; }
+  @media (max-width: 760px) { .split { grid-template-columns: 1fr; } }
+  .reveal .gapcol { opacity: 0; transform: translateY(20px); transition: opacity 0.6s var(--ease-out) var(--d), transform 0.6s var(--ease-out) var(--d); }
+  .reveal.in .gapcol { opacity: 1; transform: none; }
+  /* caption above the block — same voice as the hero file name */
+  .block-cap { display: flex; align-items: center; gap: 0.5rem; margin: 0 0.15rem 0.6rem; font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-2); letter-spacing: 0.01em; }
+  .block-cap__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); }
+  .block-cap--ok { color: var(--accent); }
+  .block-cap--ok .block-cap__dot { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .panel { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); overflow: hidden; transition: transform 0.2s var(--ease), box-shadow 0.25s var(--ease), border-color 0.2s var(--ease); }
+  .gapcol:hover .panel { transform: translateY(-3px); box-shadow: var(--shadow); }
+  .panel--good { border-color: var(--accent); }
+  :global(.panel pre.astro-code) { margin: 0; padding: 0.9rem 1rem 1rem; background: transparent !important; font-size: 0.78rem; line-height: 1.6; }
+  .panel--good :global(pre.astro-code) { background: var(--accent-tint) !important; }
+
+  /* steps */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.9rem; }
+  @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
+  .step { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); padding: 1.5rem 1.4rem; transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), box-shadow 0.2s var(--ease); }
+  .reveal .step { opacity: 0; transform: translateY(20px); transition: opacity 0.6s var(--ease-out) var(--d), transform 0.6s var(--ease-out) var(--d); }
+  .reveal.in .step { opacity: 1; transform: none; }
+  .step:hover { transform: translateY(-3px); border-color: var(--ink); box-shadow: var(--shadow); }
+  .step__n { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; font-family: var(--font-mono); font-weight: 700; color: #fff; background: var(--ink); }
+  .step:hover .step__n { background: var(--accent); }
+  .step h3 { font-family: var(--font-display); font-size: 1.18rem; font-weight: 700; letter-spacing: -0.01em; margin: 1rem 0 0.45rem; }
+  .step p { font-size: 0.92rem; line-height: 1.55; color: var(--ink-2); }
+
+  /* performance band — sits on the canvas, delineated by hairlines */
+  .band-dark { position: relative; padding: clamp(3.25rem, 7vw, 5rem) 0; border-top: 1px solid var(--line); }
+  .band-dark .sec__title { max-width: 22ch; }
+  /* bars become a white block so they read on the gray canvas */
+  .bars { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.7rem 1.8rem; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 1.4rem; margin-top: 2rem; }
+  .bar__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.55rem; }
+  .bar__name { font-size: 0.95rem; font-weight: 500; color: var(--ink-2); }
+  .bar__name--hero { color: var(--ink); font-weight: 700; }
+  .bar__sub { display: block; font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-3); font-weight: 400; margin-top: 0.15rem; }
+  .bar__val { font-family: var(--font-mono); font-size: 1rem; color: var(--ink-3); white-space: nowrap; }
+  .bar__val--hero { color: var(--accent); font-weight: 600; }
+  .bar__track { height: 16px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .bar__fill { display: block; height: 100%; width: var(--w); border-radius: 7px; background: var(--ink-3); transform: scaleX(0); transform-origin: left; }
+  .reveal.in .bar__fill { animation: grow 1.05s var(--ease-out) var(--d) forwards; }
+  .bar__fill--hero { background: linear-gradient(90deg, var(--accent), #ffa05e); }
+  .bar__fill--ghost { background: repeating-linear-gradient(45deg, var(--line) 0 7px, transparent 7px 14px); border: 1px dashed var(--ink-3); }
+  @keyframes grow { to { transform: scaleX(1); } }
+  @media (prefers-reduced-motion: reduce) { .bar__fill { transform: none; } }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 2.2rem; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; }
+  @media (max-width: 700px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: var(--card); padding: 1.3rem 1.3rem; }
+  .reveal .stat { opacity: 0; transition: opacity 0.6s var(--ease-out) var(--d); }
+  .reveal.in .stat { opacity: 1; }
+  .stat b { display: block; font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }
+  .stat span { font-size: 0.82rem; color: var(--ink-2); }
+
+  /* errors */
+  .errcols { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 1.8rem; margin-top: 1.9rem; align-items: center; }
+  @media (max-width: 820px) { .errcols { grid-template-columns: 1fr; } }
+  .ticks { list-style: none; padding: 0; margin: 1.3rem 0 0; display: flex; flex-direction: column; gap: 0.65rem; }
+  .ticks li { position: relative; padding-left: 1.8rem; font-size: 0.93rem; color: var(--ink-2); }
+  .ticks li::before { content: '✓'; position: absolute; left: 0; top: -1px; width: 21px; height: 21px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 6px; }
+
+  /* output card — light, reads as a console */
+  .term { border-radius: var(--radius); overflow: hidden; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+  .reveal .term { opacity: 0; transform: translateY(16px); transition: opacity 0.6s var(--ease-out) 0.1s, transform 0.6s var(--ease-out) 0.1s; }
+  .reveal.in .term { opacity: 1; transform: none; }
+  .term--inline { margin-top: 1.7rem; }
+  .term__bar { display: flex; align-items: center; gap: 0.5rem; background: var(--paper-2); border-bottom: 1px solid var(--line); padding: 0.55rem 0.95rem; font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-2); }
+  .term__dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .term__body { margin: 0; padding: 1.15rem 1.25rem; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.8; color: var(--ink); white-space: pre-wrap; }
+  .t-dim { color: var(--ink-3); }
+  .t-ok { color: var(--ok); font-weight: 500; }
+  .t-bad { color: var(--accent); font-weight: 500; }
+  .t-key { color: #fff; background: var(--accent); border-radius: 3px; padding: 0 0.2em; }
+
+  /* breadth */
+  .breadth__label { font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-top: 1.6rem; }
+  .breadth__label--gap { margin-top: 2.2rem; }
+  .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.8rem; }
+  .tag { font-size: 0.86rem; color: var(--ink-2); background: var(--card); border: 1px solid var(--line); border-radius: 9px; padding: 0.4rem 0.8rem; transition: color 0.16s var(--ease), border-color 0.16s var(--ease), background 0.16s var(--ease); }
+  .tag:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-soft); }
+
+  .fwgrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.7rem; margin-top: 0.9rem; }
+  @media (max-width: 820px) { .fwgrid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 480px) { .fwgrid { grid-template-columns: repeat(3, 1fr); } }
+  .fw { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; padding: 1.2rem 0.5rem; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); color: var(--ink); transition: transform 0.18s var(--ease), border-color 0.18s var(--ease), color 0.18s var(--ease), box-shadow 0.2s var(--ease); }
+  .reveal .fw { opacity: 0; transform: translateY(14px); transition: opacity 0.5s var(--ease-out) var(--d), transform 0.5s var(--ease-out) var(--d); }
+  .reveal.in .fw { opacity: 1; transform: none; }
+  .fw:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--accent); box-shadow: var(--shadow); }
+  .fw svg { width: 27px; height: 27px; fill: currentColor; }
+  .fw span { font-size: 0.8rem; color: var(--ink-2); }
+  .fw:hover span { color: var(--accent); }
+  .bundlers { display: flex; flex-wrap: wrap; gap: 0.5rem 1.1rem; margin-top: 1rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink-3); }
+  .bundlers span { transition: color 0.16s var(--ease); cursor: default; }
+  .bundlers span:hover { color: var(--ink); }
+
+  /* outro — a calm closing card, no hard sell */
+  .outro {
+    display: flex; align-items: center; justify-content: space-between; gap: 1.4rem 2.2rem; flex-wrap: wrap;
+    padding: clamp(1.8rem, 4vw, 2.6rem) clamp(1.6rem, 4vw, 2.4rem);
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: radial-gradient(130% 150% at 100% 0%, var(--accent-soft), transparent 52%), var(--card);
+    box-shadow: var(--shadow-sm);
+  }
+  .outro__title { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.5rem, 3vw, 2.1rem); letter-spacing: -0.03em; line-height: 1.08; }
+  .outro__sub { margin-top: 0.55rem; max-width: 50ch; color: var(--ink-2); font-size: 1rem; line-height: 1.55; }
+  .outro__cta { display: flex; gap: 0.65rem; flex-wrap: wrap; flex-shrink: 0; }
+
+</style>

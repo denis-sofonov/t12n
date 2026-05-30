@@ -1,0 +1,137 @@
+---
+interface Props { lang?: 'en' | 'ru' }
+const { lang = 'en' } = Astro.props
+const t = lang === 'ru'
+  ? { ph: 'Поиск по документации…', empty: 'Ничего не найдено', start: 'Введите запрос', dev: 'Поиск доступен в продакшн-сборке (pnpm build && pnpm preview).', close: 'закрыть' }
+  : { ph: 'Search the docs…', empty: 'No results', start: 'Type to search', dev: 'Search works in the production build (pnpm build && pnpm preview).', close: 'close' }
+---
+
+<div class="search" id="search" hidden data-dev={t.dev} data-empty={t.empty}>
+  <div class="search__overlay" data-close></div>
+  <div class="search__panel" role="dialog" aria-modal="true" aria-label="Search">
+    <div class="search__bar">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input class="search__input" id="search-input" type="search" placeholder={t.ph} autocomplete="off" spellcheck="false" aria-label={t.ph} />
+      <kbd class="search__esc" data-close>esc</kbd>
+    </div>
+    <div class="search__results" id="search-results"><p class="search__hint">{t.start}</p></div>
+  </div>
+</div>
+
+<style>
+  .search { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: clamp(3rem, 12vh, 9rem) 1rem 1rem; }
+  .search[hidden] { display: none; }
+  .search__overlay { position: absolute; inset: 0; background: rgba(27, 23, 18, 0.4); backdrop-filter: blur(3px); animation: fade 0.18s var(--ease); }
+  .search__panel {
+    position: relative; width: 100%; max-width: 600px; max-height: 70vh; display: flex; flex-direction: column;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: 0 30px 70px -30px rgba(27, 23, 18, 0.55); overflow: hidden;
+    animation: pop 0.18s var(--ease);
+  }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes pop { from { opacity: 0; transform: translateY(-8px); } }
+
+  .search__bar { display: flex; align-items: center; gap: 0.7rem; padding: 0.85rem 1rem; border-bottom: 1px solid var(--line); color: var(--ink-3); }
+  .search__input {
+    flex: 1; border: 0; background: none; outline: none; color: var(--ink);
+    font-family: var(--font-body); font-size: 1rem;
+  }
+  .search__esc { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-3); border: 1px solid var(--line); border-radius: 5px; padding: 0.12em 0.4em; cursor: pointer; }
+
+  .search__results { overflow-y: auto; padding: 0.5rem; }
+  .search__hint { padding: 1.5rem 0.6rem; text-align: center; color: var(--ink-3); font-size: 0.9rem; }
+  .search__item { display: block; padding: 0.7rem 0.8rem; border-radius: var(--radius-sm); cursor: pointer; }
+  .search__item:hover, .search__item.is-sel { background: var(--accent-soft); }
+  .search__item-title { font-weight: 600; font-size: 0.95rem; color: var(--ink); margin-bottom: 0.15rem; }
+  .search__item.is-sel .search__item-title { color: var(--accent); }
+  .search__item-excerpt { font-size: 0.83rem; line-height: 1.5; color: var(--ink-2); }
+  .search__item-excerpt :global(mark) { background: var(--marker); color: var(--ink); border-radius: 2px; padding: 0 0.1em; }
+</style>
+
+<script>
+  let pagefind: any = null
+  let loadFailed = false
+
+  async function ensurePagefind() {
+    if (pagefind || loadFailed) return pagefind
+    try {
+      const url = '/pagefind/pagefind.js'
+      pagefind = await import(/* @vite-ignore */ url)
+      await pagefind.options?.({ excerptLength: 18 })
+      await pagefind.init?.()
+    } catch {
+      loadFailed = true
+    }
+    return pagefind
+  }
+
+  function init() {
+    const modal = document.getElementById('search')
+    const input = document.getElementById('search-input') as HTMLInputElement | null
+    const results = document.getElementById('search-results')
+    const opener = document.getElementById('search-open')
+    if (!modal || !input || !results) return
+
+    const devMsg = modal.dataset.dev || ''
+    const emptyMsg = modal.dataset.empty || 'No results'
+    let sel = -1
+    let items: HTMLAnchorElement[] = []
+
+    const open = () => {
+      modal.hidden = false
+      document.body.style.overflow = 'hidden'
+      input.focus()
+      ensurePagefind()
+    }
+    const close = () => {
+      modal.hidden = true
+      document.body.style.overflow = ''
+    }
+    const setSel = (i: number) => {
+      if (!items.length) return
+      sel = (i + items.length) % items.length
+      items.forEach((el, n) => el.classList.toggle('is-sel', n === sel))
+      items[sel]?.scrollIntoView({ block: 'nearest' })
+    }
+
+    opener?.addEventListener('click', open)
+    modal.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', close))
+
+    let timer: ReturnType<typeof setTimeout>
+    input.addEventListener('input', () => {
+      clearTimeout(timer)
+      timer = setTimeout(run, 140)
+    })
+    async function run() {
+      const q = input!.value.trim()
+      sel = -1; items = []
+      if (!q) { results!.innerHTML = '' ; return }
+      const pf = await ensurePagefind()
+      if (!pf) { results!.innerHTML = `<p class="search__hint">${devMsg}</p>`; return }
+      const search = await pf.search(q)
+      const data = await Promise.all(search.results.slice(0, 8).map((r: any) => r.data()))
+      if (!data.length) { results!.innerHTML = `<p class="search__hint">${emptyMsg}</p>`; return }
+      results!.innerHTML = data
+        .map((d: any) => `<a class="search__item" href="${d.url}"><div class="search__item-title">${d.meta?.title ?? d.url}</div><div class="search__item-excerpt">${d.excerpt}</div></a>`)
+        .join('')
+      items = Array.from(results!.querySelectorAll('.search__item'))
+      items.forEach((el) => el.addEventListener('click', close))
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setSel(sel + 1) }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setSel(sel - 1) }
+      else if (e.key === 'Enter' && items[sel]) { items[sel].click() }
+    })
+
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); open() }
+      else if (e.key === '/' && !/^(INPUT|TEXTAREA)$/.test((e.target as HTMLElement)?.tagName)) { e.preventDefault(); open() }
+      else if (e.key === 'Escape' && !modal.hidden) close()
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('astro:before-swap', () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = '' }, { once: true })
+  }
+
+  document.addEventListener('astro:page-load', init)
+</script>
