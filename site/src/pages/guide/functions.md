@@ -29,6 +29,11 @@ A bad payload at the call site fails *before* `computeSomething` runs. A buggy
 implementation that returns the wrong shape fails *before* the value leaves the
 function.
 
+> **Destructured parameters are skipped.** A param written as `{ id, name }: User`
+> is already destructured, so there's no single binding to revalidate — t12n
+> leaves it alone. Take the value whole (`user: User`) and destructure inside the
+> body if you want the check, or mark it `Check<User>` to be told it was skipped.
+
 In a production build each of those checks is a [compiled
 validator](/guide/engine), not an interpreted schema — so the guarantee is
 effectively free.

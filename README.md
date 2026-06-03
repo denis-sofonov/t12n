@@ -16,8 +16,8 @@ This is a pnpm workspace (`packages/*` + `site`).
 
 | Path | What |
 | :--- | :--- |
-| [`packages/t12n`](packages/t12n) | The package — build plugin + runtime + types. Published to npm as **`t12n`**. |
-| [`site`](site) | Astro site: landing page, guide and interactive playground (EN + RU). Deployed to Vercel as **t12n.dev**. |
+| [`packages/t12n`](packages/t12n) | The package — build plugin + runtime + types. Published to npm as **`@dnssfnv/t12n`**. |
+| [`site`](site) | Astro site: landing page, guide and interactive playground (EN + RU). Deployed to Vercel as **t12n.vercel.app**. |
 
 ## Develop
 
@@ -25,7 +25,7 @@ This is a pnpm workspace (`packages/*` + `site`).
 pnpm install
 pnpm -r build                  # build all packages (t12n + site)
 pnpm -r test                   # run tests
-pnpm --filter t12n dev         # build the package in watch mode
+pnpm --filter @dnssfnv/t12n dev    # build the package in watch mode
 pnpm --filter @t12n/site dev   # run the site locally
 ```
 

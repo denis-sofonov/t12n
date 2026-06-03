@@ -53,7 +53,7 @@ type Validated<T>   = T & { readonly [__validated]:   true }
 ```
 
 The brand is a `unique symbol`, so nothing outside the package can forge it.
-With the DOM overrides loaded (via `/// <reference types="t12n" />`), `fetch().json()`
+With the DOM overrides loaded (via `/// <reference types="@dnssfnv/t12n" />`), `fetch().json()`
 returns `Promise<Unvalidated<unknown>>` — and the compiler refuses to let you
 use that as anything else until it has passed through a check.
 

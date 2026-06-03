@@ -14,8 +14,8 @@ lang: ru
 ## Установка
 
 ```bash
-npm i t12n
-# также: pnpm add t12n · yarn add t12n · bun add t12n
+npm i @dnssfnv/t12n
+# также: pnpm add @dnssfnv/t12n · yarn add @dnssfnv/t12n · bun add @dnssfnv/t12n
 ```
 
 В этом одном пакете есть всё: Vite-плагин, рантайм, DOM-переопределения и
@@ -27,26 +27,26 @@ npm i t12n
 уже подключён в проекте (например `env.d.ts` или новый `t12n.d.ts`):
 
 ```ts
-/// <reference types="t12n" />
+/// <reference types="@dnssfnv/t12n" />
 ```
 
 Это подгрузит DOM-переопределения, которые помечают `fetch().json()`,
 `localStorage.getItem` и подобное как `Unvalidated<T>`, и сделает тип-маркер
 `Check<T>` доступным.
 
-> Предпочитайте ссылку, а не `"types": ["t12n"]` в `tsconfig.json` — массив
+> Предпочитайте ссылку, а не `"types": ["@dnssfnv/t12n"]` в `tsconfig.json` — массив
 > `types` там **выключает** авто-подключение всех *остальных* амбиентных пакетов
 > (`node`, `vite/client`, глобалы тестов…). Ссылка подгружает глобалы t12n без
 > этого побочного эффекта. И это необязательно: рантайм-проверки работают и без
 > неё — она лишь добавляет компайл-тайм-давление и глобальный `Check<T>` (его
-> можно и просто `import type { Check } from 't12n'`).
+> можно и просто `import type { Check } from '@dnssfnv/t12n'`).
 
 ## Регистрация Vite-плагина
 
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite'
-import t12n from 't12n/vite'
+import t12n from '@dnssfnv/t12n/vite'
 
 export default defineConfig({
   plugins: [t12n()],
@@ -73,7 +73,7 @@ console.log(user.email)
 На сборке это, по сути, превращается в:
 
 ```ts
-import { __check } from 't12n/runtime'
+import { __check } from '@dnssfnv/t12n/runtime'
 
 const user = __check(
   await fetch('/api/me').then(r => r.json()),

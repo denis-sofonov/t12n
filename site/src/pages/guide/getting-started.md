@@ -14,8 +14,8 @@ t12n inserts the checks for you.
 ## Install
 
 ```bash
-npm i t12n
-# also: pnpm add t12n · yarn add t12n · bun add t12n
+npm i @dnssfnv/t12n
+# also: pnpm add @dnssfnv/t12n · yarn add @dnssfnv/t12n · bun add @dnssfnv/t12n
 ```
 
 That one package contains everything: the Vite plugin, the runtime, the DOM
@@ -27,25 +27,25 @@ Add a one-line triple-slash reference in any ambient `.d.ts` your project
 already includes (e.g. `env.d.ts`, or a new `t12n.d.ts`):
 
 ```ts
-/// <reference types="t12n" />
+/// <reference types="@dnssfnv/t12n" />
 ```
 
 This loads the DOM overrides that mark `fetch().json()`, `localStorage.getItem`,
 and friends as `Unvalidated<T>`, and makes the `Check<T>` marker type available.
 
-> Prefer the reference over `"types": ["t12n"]` in `tsconfig.json` — setting the
+> Prefer the reference over `"types": ["@dnssfnv/t12n"]` in `tsconfig.json` — setting the
 > `types` array there turns off automatic inclusion of every *other* ambient
 > package (`node`, `vite/client`, test globals…). The reference loads t12n's
 > globals without that side effect. It's optional, too: runtime checks work
 > without it — it only adds the compile-time pressure and the global `Check<T>`
-> (which you can also just `import type { Check } from 't12n'`).
+> (which you can also just `import type { Check } from '@dnssfnv/t12n'`).
 
 ## Register the Vite plugin
 
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite'
-import t12n from 't12n/vite'
+import t12n from '@dnssfnv/t12n/vite'
 
 export default defineConfig({
   plugins: [t12n()],
@@ -72,7 +72,7 @@ console.log(user.email)
 At build time this becomes, in essence:
 
 ```ts
-import { __check } from 't12n/runtime'
+import { __check } from '@dnssfnv/t12n/runtime'
 
 const user = __check(
   await fetch('/api/me').then(r => r.json()),

@@ -18,11 +18,11 @@ Pick the one your tool uses — it's the same plugin:
 
 | Bundler | Import |
 | :--- | :--- |
-| Vite | `t12n/vite` |
-| webpack | `t12n/webpack` |
-| Rollup | `t12n/rollup` |
-| esbuild | `t12n/esbuild` |
-| Rspack | `t12n/rspack` |
+| Vite | `@dnssfnv/t12n/vite` |
+| webpack | `@dnssfnv/t12n/webpack` |
+| Rollup | `@dnssfnv/t12n/rollup` |
+| esbuild | `@dnssfnv/t12n/esbuild` |
+| Rspack | `@dnssfnv/t12n/rspack` |
 
 ## React
 
@@ -50,11 +50,11 @@ function Card({ user }: { user: User }) { /* … */ }
 
 ## Next.js
 
-Next builds with webpack, so wire t12n through `t12n/webpack`:
+Next builds with webpack, so wire t12n through `@dnssfnv/t12n/webpack`:
 
 ```js
 // next.config.js
-import t12n from 't12n/webpack'
+import t12n from '@dnssfnv/t12n/webpack'
 
 export default {
   webpack(config) {

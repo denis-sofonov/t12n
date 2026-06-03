@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config'
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://t12n.dev',
+  site: 'https://t12n.vercel.app',
   i18n: {
     locales: ['en', 'ru'],
     defaultLocale: 'en',

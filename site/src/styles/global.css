@@ -114,13 +114,6 @@ body::after {
   .in .mark--draw, .mark--draw.in { clip-path: inset(0 0 0 0); }
 }
 
-/* infinite marquee row */
-.marquee { overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
-.marquee__row { display: flex; gap: 0.7rem; width: max-content; animation: marquee 32s linear infinite; }
-.marquee:hover .marquee__row { animation-play-state: paused; }
-@keyframes marquee { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .marquee__row { animation: none; } }
-
 /* ─── shared layout primitives ──────────────────────────────── */
 .wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--pad); }
 
@@ -252,5 +245,19 @@ pre.astro-code {
 @media (prefers-reduced-motion: no-preference) {
   .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out); transition-delay: var(--d, 0s); }
   .reveal.in { opacity: 1; transform: none; }
+
+  /* light staggered settle for content inside a revealing section —
+     echoes the hero's gentle rise so sections lower down don't slab in flat */
+  .reveal :is(.eyebrow, .sec__title, .sec__lede, .breadth__label, .tags, .ticks, .outro__title, .outro__sub) {
+    opacity: 0; transform: translateY(9px);
+    transition: opacity 0.55s var(--ease-out), transform 0.55s var(--ease-out);
+  }
+  .reveal.in :is(.eyebrow, .sec__title, .sec__lede, .breadth__label, .tags, .ticks, .outro__title, .outro__sub) {
+    opacity: 1; transform: none;
+  }
+  .reveal.in .eyebrow                          { transition-delay: 0.04s; }
+  .reveal.in .sec__title, .reveal.in .outro__title { transition-delay: 0.11s; }
+  .reveal.in .sec__lede, .reveal.in .outro__sub, .reveal.in .breadth__label { transition-delay: 0.18s; }
+  .reveal.in .tags, .reveal.in .ticks          { transition-delay: 0.24s; }
 }
 

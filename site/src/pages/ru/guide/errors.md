@@ -19,7 +19,7 @@ lang: ru
 Эту политику вы задаёте один раз, на входе в приложение:
 
 ```ts
-import { configure } from 't12n'
+import { configure } from '@dnssfnv/t12n'
 
 configure({
   onViolation: import.meta.env.PROD
@@ -81,7 +81,7 @@ interface ValidationIssue {
 Ловится обычным `instanceof`:
 
 ```ts
-import { ValidationError } from 't12n'
+import { ValidationError } from '@dnssfnv/t12n'
 
 try {
   doSomething()

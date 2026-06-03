@@ -54,7 +54,7 @@ type Validated<T>   = T & { readonly [__validated]:   true }
 ```
 
 Бренд — `unique symbol`, подделать снаружи пакета нельзя. С загруженными
-DOM-переопределениями (через `/// <reference types="t12n" />`) `fetch().json()` возвращает
+DOM-переопределениями (через `/// <reference types="@dnssfnv/t12n" />`) `fetch().json()` возвращает
 `Promise<Unvalidated<unknown>>` — и компилятор не даёт использовать это как
 что-то ещё, пока оно не прошло через проверку.
 

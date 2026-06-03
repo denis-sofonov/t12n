@@ -93,7 +93,7 @@ t12n({ mode: 'manual' })
 тип-маркер `Check<T>` — в присваивании, параметре или возвращаемом типе:
 
 ```ts
-import type { Check } from 't12n'
+import type { Check } from '@dnssfnv/t12n'
 import type { User } from './types'
 
 // обычная аннотация: ничего не происходит

@@ -93,7 +93,7 @@ Now ordinary annotations are left alone. To request a check, use the `Check<T>`
 marker type at the assignment, parameter or return site:
 
 ```ts
-import type { Check } from 't12n'
+import type { Check } from '@dnssfnv/t12n'
 import type { User } from './types'
 
 // plain annotation: nothing happens

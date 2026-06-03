@@ -19,7 +19,7 @@ can't make for you:
 You wire that policy once, at app entry:
 
 ```ts
-import { configure } from 't12n'
+import { configure } from '@dnssfnv/t12n'
 
 configure({
   onViolation: import.meta.env.PROD
@@ -82,7 +82,7 @@ interface ValidationIssue {
 Catch it with a plain `instanceof`:
 
 ```ts
-import { ValidationError } from 't12n'
+import { ValidationError } from '@dnssfnv/t12n'
 
 try {
   doSomething()
