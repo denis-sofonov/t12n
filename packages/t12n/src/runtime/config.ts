@@ -66,7 +66,7 @@ let handler: ViolationHandler | null = null
  * typically branching on your build stage:
  *
  * ```ts
- * import { configure } from 't12n'
+ * import { configure } from '@dnssfnv/t12n'
  *
  * configure({
  *   onViolation: import.meta.env.PROD

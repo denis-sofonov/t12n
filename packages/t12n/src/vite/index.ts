@@ -84,7 +84,7 @@ export interface T12nOptions {
   onUnvalidated?: 'warn' | 'error' | 'off'
 }
 
-const RUNTIME_IMPORT = 't12n/runtime'
+const RUNTIME_IMPORT = '@dnssfnv/t12n/runtime'
 const CHECK_FN       = '__t12n_check'
 const GUARD_FN       = '__t12n_guard'
 // AOT helpers. FAIL_SENTINEL / AOTFAIL_FN must match the names codegen.ts emits.
@@ -129,7 +129,7 @@ function nearestFunctionLike(node: Node): Node | undefined {
 
 /**
  * Returns true if `typeNode` is a `Check<T>` reference. Compared by the local
- * name only — the user is expected to import the type from 't12n' (or have it
+ * name only — the user is expected to import the type from '@dnssfnv/t12n' (or have it
  * via ambient types). We do not chase aliases.
  */
 function isCheckAnnotation(typeNode: TypeNode): TypeNode | null {
@@ -618,8 +618,18 @@ const unplugin = createUnplugin((options: T12nOptions = {}) => {
               if (!effective) continue
               if (PRIMITIVE_KINDS.has(effective.getKind())) continue
 
+              // Destructured params (`{ a, b }` / `[a, b]`) can't be reassigned at
+              // the body top like a plain identifier — `{ a } = __check({ a })`
+              // parses as a block, not an assignment (a hard SyntaxError). Skip
+              // them; surface an explicit Check<T> so the author knows it didn't apply.
+              const nameNode = param.getNameNode()
+              if (Node.isObjectBindingPattern(nameNode) || Node.isArrayBindingPattern(nameNode)) {
+                if (checkInner) reportUnvalidated(paramTypeNode.getStart(), `param "${nameNode.getText()}"`)
+                continue
+              }
+
               const schema = typeNodeToSchema(effective, schemaCache, watchedFiles)
-              const paramName = param.getNameNode().getText()
+              const paramName = nameNode.getText()
               if (isNoopSchema(schema)) {
                 // Auto-mode params are too numerous to warn on; an explicit
                 // Check<T> that can't be validated is worth surfacing.

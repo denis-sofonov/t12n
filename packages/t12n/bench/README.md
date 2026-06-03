@@ -8,27 +8,30 @@ marketing — measure.
 ```bash
 pnpm build
 pnpm add -D zod          # optional, enables the Zod row
-node bench/runtime.bench.mjs
+pnpm bench:runtime       # or: pnpm bench  (runtime + codegen)
 ```
 
-Validates a representative payload (100 users — nested address, tags, enum role)
-50,000 times.
+Validates a representative payload (100 users — nested address, tags, enum role).
+Reports best-of-N ops/s per row to cut JIT/GC noise. There are two t12n rows: the
+**AOT** validator the Vite plugin actually inlines into your bundle, and the
+generic `__check` **interpreter** used as a fallback when no schema was compiled.
 
 **Example run** (Apple Silicon, Node 24, numbers vary by machine):
 
-| Validator         | ops/s   | vs t12n |
-| :---------------- | ------: | :------ |
-| `zod` 4 `.parse`  | ~27,300 | 1.6×    |
-| **t12n `__check`**| ~17,100 | 1.0×    |
-| `structuredClone` | ~5,700  | 0.3×    |
+| Validator              | ops/s    | vs t12n AOT |
+| :--------------------- | -------: | :---------- |
+| hand-written (ceiling) | ~800,000 | 1.2×        |
+| **t12n AOT (shipped)** | ~655,000 | 1.0×        |
+| `zod` 4 `.parse`       |  ~76,000 | 0.12×       |
+| t12n `__check` (interp)|  ~37,000 | 0.06×       |
 
-**Honest read:** t12n is the same order of magnitude as Zod, but **Zod 4 is
-faster** — it compiles specialised validators, while t12n's runtime is a small
-generic recursive walker. Both are far cheaper than a deep clone and plenty fast
-for boundary validation. **Speed is not t12n's selling point** — zero schema
-authoring, zero `validate()` calls, the `Unvalidated<T>` compiler pressure and
-the live Proxy guard are. If raw throughput is your bottleneck, the schema
-format is plain data and could be compiled to a specialised function later.
+**Honest read:** the path that ships — the plugin-compiled **AOT** validator —
+runs within ~20% of a hand-written check and lands around **8× Zod 4**, because
+both compile specialised, straight-line field access. The generic `__check`
+interpreter (fallback, no plugin) is the slow row and trails Zod; if you see that
+number, the boundary wasn't compiled. Speed still isn't the *main* selling point
+— zero schema authoring, zero `validate()` calls, the `Unvalidated<T>` compiler
+pressure and the live Proxy guard are — but the shipped path is genuinely fast.
 
 ## 2. Bundle size
 

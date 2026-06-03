@@ -1,15 +1,19 @@
 /**
  * Runtime validation micro-benchmark.
  *
- *   pnpm build && node bench/runtime.bench.mjs
+ *   pnpm build && pnpm bench:runtime
  *
  * Compares t12n's runtime `__check` against Zod (if installed) and a baseline.
  * Runs several trials and reports the best ops/s of each to cut JIT/GC noise.
  * For the Zod row: `pnpm add -D zod`.
+ *
+ * Runtime helpers come from the built `dist/` (the real shipped artifact);
+ * `generate` is read straight from source via tsx, since codegen isn't a
+ * published entry. Hence the `tsx` runner in the script above.
  */
 import { performance } from 'node:perf_hooks'
 import { __check, __runAot, __aotFail, __FAIL } from '../dist/runtime.js'
-import { generate } from '../dist/codegen.js'
+import { generate } from '../src/vite/codegen.ts'
 
 // Build the validator exactly as the Vite plugin emits it (AOT): generate
 // specialized source, instantiate with the runtime's helpers in scope, and run

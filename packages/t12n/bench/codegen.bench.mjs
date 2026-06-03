@@ -3,15 +3,18 @@
  * hold its speed across the type surface (objects, unions, optionals, records,
  * tuples), or only on flat objects?
  *
- *   pnpm build && node bench/codegen.bench.mjs
+ *   pnpm build && pnpm bench:codegen
  *
  * For each schema it (1) verifies the generated validator agrees with the
  * runtime interpreter on sample data, then (2) reports best-of-N ops/s for the
  * interpreter vs the generated validator (and zod where comparable).
+ *
+ * `__check` comes from the built `dist/`; `generate` is read from source via
+ * tsx, since codegen isn't a published entry.
  */
 import { performance } from 'node:perf_hooks'
 import { __check } from '../dist/runtime.js'
-import { generate } from '../dist/codegen.js'
+import { generate } from '../src/vite/codegen.ts'
 
 const FAIL = Symbol('fail')
 const failStub = (_path, _expected, _received) => FAIL // generated code calls __t12n_fail(...)

@@ -292,9 +292,10 @@ function describe(schema: Schema): string {
 }
 
 /**
- * Generate validator source for `schema`. Throws `Unsupported` for cyclic
- * (recursive) schemas — those need named functions and are left to the
- * interpreter for now.
+ * Generate validator source for `schema`. Assumes an acyclic schema: recursive
+ * (`def`/`ref`) types are filtered out by the caller (see vite/index.ts) and
+ * left to the interpreter, so this walk always terminates. A kind it cannot
+ * specialize throws {@link Unsupported}, signalling the caller to fall back.
  */
 export function generate(schema: Schema): Generated {
   const ctx = new Ctx()

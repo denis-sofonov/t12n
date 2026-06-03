@@ -1,5 +1,5 @@
 /**
- * t12n — typevalidation
+ * t12n — type-driven runtime validation
  *
  * Public surface of the package root:
  *   - Type aliases: Check<T>, Unvalidated<T>, Validated<T>
@@ -7,7 +7,7 @@
  *   - Ambient DOM overrides so fetch().json(), localStorage.getItem, etc.
  *     return Unvalidated<T> and the compiler refuses raw access.
  *
- * The validation runtime itself is in `t12n/runtime` — the plugin emits
+ * The validation runtime itself is in `@dnssfnv/t12n/runtime` — the plugin emits
  * imports there. End users should not import from /runtime directly.
  */
 

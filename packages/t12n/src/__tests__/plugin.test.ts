@@ -120,6 +120,27 @@ describe('mode: auto', () => {
     expect(out).toMatch(/u = __t12n_runAot\(__t12n_v\d+, u,/)
   })
 
+  it('does NOT emit a reassignment for a destructured param (would be a SyntaxError)', async () => {
+    // `{ id, name } = __check({ id, name })` at the body top parses as a block,
+    // not an assignment — so a destructured param must be skipped, not wrapped.
+    const out = await transformFile(`
+      import type { User } from './types'
+      function greet({ id, name }: User) { return name + id }
+    `)
+    // Either no transform at all, or — if other sites exist — never a binding-
+    // pattern assignment.
+    if (out !== null) expect(out).not.toMatch(/[}\]]\s*=\s*__t12n_/)
+  })
+
+  it('still wraps a plain param alongside a skipped destructured one', async () => {
+    const out = await transformFile(`
+      import type { User, Result } from './types'
+      function f(u: User, { ok }: Result) { return u.name + ok }
+    `)
+    expect(out).toMatch(/u = __t12n_runAot\(/)          // plain param wrapped
+    expect(out).not.toMatch(/[}\]]\s*=\s*__t12n_/)       // destructured one not
+  })
+
   it('wraps function return type', async () => {
     const out = await transformFile(`
       import type { User } from './types'
@@ -158,7 +179,7 @@ describe('mode: auto', () => {
       const a: User = await fetch('/a').then(r => r.json())
       const b: User = await fetch('/b').then(r => r.json())
     `)
-    const matches = out!.match(/from ['"]t12n\/runtime['"]/g)
+    const matches = out!.match(/from ['"]@dnssfnv\/t12n\/runtime['"]/g)
     expect(matches?.length).toBe(1)
   })
 
@@ -272,7 +293,7 @@ describe('live mode', () => {
       import type { User } from './types'
       const u: User = await fetch('/me').then(r => r.json())
     `, 'auto', 'app.ts', true)
-    expect(out).toContain("import { __guard as __t12n_guard } from 't12n/runtime'")
+    expect(out).toContain("import { __guard as __t12n_guard } from '@dnssfnv/t12n/runtime'")
     expect(out).toContain('__t12n_guard(')
     expect(out).not.toContain('__t12n_check(')
   })
